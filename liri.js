@@ -2,40 +2,84 @@ require("dotenv").config();
 
 var keys = require("./keys.js");
 
-// var spotify = new Spotify(keys.spotify);
-
 var axios = require("axios");
+
+var Spotify = require('node-spotify-api');
+
+var spotify = new Spotify(keys.spotify);
+
+var fs = require("fs");
 
 var command = process.argv[2];
 
-if (command === "concert-this") {
+var query = [];
 
-    // logic for BANDS IN TOWN
-
-} else if (command === "spotify-this-song") {
-
-    // logic for SPOTIFY
-
-} else if (command === "movie-this") {
-
-    // logic for IMDB
-    var movieName = process.argv.slice(3).join("+");
-
-    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
-
-    axios.get(queryUrl).then(function (response) {
-        console.log("Title: " + response.data.Title);
-        console.log("Year: " + response.data.Year);
-        console.log("IMDB Rating: " + response.data.Ratings[0].Value);
-        console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
-        console.log("Country: " + response.data.Country);
-        console.log("Laguage: " + response.data.Language);
-        console.log("Plot: " + response.data.Plot);
-        console.log("Actors: " + response.data.Actors);
-    });
-
-} else if (command === "do-what-it-says") {
-
-    // logic for RANDOM.TXT
-
+for (var i = 3; i < process.argv.length; i++) {
+    query.push(process.argv[i]);
 }
+
+function liri(cmd, search) {
+
+    if (cmd === "concert-this") {
+
+        // logic for BANDS IN TOWN
+
+    } else if (cmd === "spotify-this-song") {
+
+        var spotifySearch = query.join(" ");
+
+        if (spotifySearch === "") {
+            spotifySearch = "The Sign Ace of Base";
+        }
+
+        spotify.search({ type: 'track', query: spotifySearch }, function (err, data) {
+            if (err) {
+                return console.log('Error occurred: ' + err);
+            }
+
+            console.log("Preview link: " + data.tracks.items[0].album.artists[0].external_urls.spotify);
+            console.log("Artist name: " + data.tracks.items[0].album.artists[0].name);
+        });
+
+    } else if (cmd === "movie-this") {
+
+        var movieName = query.join(" ");
+
+        if (movieName === "") {
+            movieName = "Mr. Nobody"
+        }
+
+        var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+
+        axios.get(queryUrl).then(function (response) {
+            console.log("\nTitle: " + response.data.Title);
+            console.log("\nYear: " + response.data.Year);
+            console.log("\nIMDB Rating: " + response.data.Ratings[0].Value);
+            console.log("\nRotten Tomatoes Rating: " + response.data.Ratings[1].Value);
+            console.log("\nCountry: " + response.data.Country);
+            console.log("\nLaguage: " + response.data.Language);
+            console.log("\nPlot: " + response.data.Plot);
+            console.log("\nActors: " + response.data.Actors + "\n");
+        });
+
+    } else if (cmd === "do-what-it-says") {
+
+        fs.readFile("random.txt", "utf8", function (error, data) {
+            if (error) {
+                return console.log(error);
+            }
+
+            var txtArr = data.split(",");
+
+            command = txtArr[0]
+
+            for (var i = 1; i < txtArr.length; i++) {
+                query.push(txtArr[i]);
+            }
+
+            liri(command, query);
+        });
+    }
+}
+
+liri(command, query);

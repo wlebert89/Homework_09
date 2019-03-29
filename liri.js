@@ -10,6 +10,8 @@ var spotify = new Spotify(keys.spotify);
 
 var fs = require("fs");
 
+var moment = require("moment");
+
 var command = process.argv[2];
 
 var query = [];
@@ -22,7 +24,21 @@ function liri(cmd, search) {
 
     if (cmd === "concert-this") {
 
-        // logic for BANDS IN TOWN
+        var artist = query.join(" ");
+
+        var bandsUrl = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp"
+
+        axios.get(bandsUrl).then(function (response) {
+            for (var i = 0; i < response.data.length; i++) {
+                console.log(response.data[i].venue.name);
+                console.log(response.data[i].venue.city + ", " + response.data[i].venue.region);
+                console.log(response.data[i].venue.country);
+                console.log(moment(response.data[i].datetime).format('MMMM Do YYYY, h:mm a'));
+                console.log("-------------------------------");
+            }
+
+            // console.log(response.data[0]);
+        });
 
     } else if (cmd === "spotify-this-song") {
 
@@ -37,8 +53,13 @@ function liri(cmd, search) {
                 return console.log('Error occurred: ' + err);
             }
 
-            console.log("Preview link: " + data.tracks.items[0].album.artists[0].external_urls.spotify);
-            console.log("Artist name: " + data.tracks.items[0].album.artists[0].name);
+            console.log("\nSong: " + data.tracks.items[0].name);
+            console.log("\nArtist: " + data.tracks.items[0].album.artists[0].name);
+            console.log("\nAlbum: " + data.tracks.items[0].album.name);
+            console.log("\nPreview link: " + data.tracks.items[0].album.artists[0].external_urls.spotify);
+            console.log("")
+
+            // console.log(data.tracks.items[0]);
         });
 
     } else if (cmd === "movie-this") {
@@ -49,9 +70,9 @@ function liri(cmd, search) {
             movieName = "Mr. Nobody"
         }
 
-        var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+        var movieUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
 
-        axios.get(queryUrl).then(function (response) {
+        axios.get(movieUrl).then(function (response) {
             console.log("\nTitle: " + response.data.Title);
             console.log("\nYear: " + response.data.Year);
             console.log("\nIMDB Rating: " + response.data.Ratings[0].Value);
@@ -59,7 +80,8 @@ function liri(cmd, search) {
             console.log("\nCountry: " + response.data.Country);
             console.log("\nLaguage: " + response.data.Language);
             console.log("\nPlot: " + response.data.Plot);
-            console.log("\nActors: " + response.data.Actors + "\n");
+            console.log("\nActors: " + response.data.Actors);
+            console.log("");
         });
 
     } else if (cmd === "do-what-it-says") {
@@ -79,6 +101,17 @@ function liri(cmd, search) {
 
             liri(command, query);
         });
+
+    } else if (cmd === "edit-text") {
+        var text = process.argv[3];
+
+        fs.writeFile("random.txt", text, function (err) {
+            if (err) {
+                return console.log(err);
+            } else {
+                console.log("random.txt has been updated.");
+            }
+        })
     }
 }
 

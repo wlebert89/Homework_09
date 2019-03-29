@@ -82,6 +82,8 @@ function liri(cmd, search) {
             console.log("\nPlot: " + response.data.Plot);
             console.log("\nActors: " + response.data.Actors);
             console.log("");
+
+            // console.log(response.data);
         });
 
     } else if (cmd === "do-what-it-says") {
